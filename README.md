@@ -2,7 +2,7 @@
 <h1>Matte Anything!🐒</h1>
 <h3> Interactive Natural Image Matting with Segment Anything Models </h3>
 
-Authors: [Jingfeng Yao](https://github.com/JingfengYao), [Xinggang Wang](https://scholar.google.com/citations?user=qNCTLV0AAAAJ&hl=zh-CN)<sup>:email:</sup>, [Lang Ye](https://github.com/YeL6), [Wenyu Liu](http://eic.hust.edu.cn/professor/liuwenyu/)
+Authors: [Jingfeng Yao](https://github.com/JingfengYao), [Xinggang Wang](https://scholar.google.com/citations?user=qNCTLV0AAAAJ&hl=zh-CN)<sup>:email:</sup>, [Lang Ye](https://github.com/YeL6), [Wenyu Liu](http://eic.hust.edu.cn/professor/liuwenyu/)ś
 
 Institute: School of EIC, HUST
 
@@ -85,7 +85,14 @@ Add [DiffMatte](https://github.com/YihanHu-2022/DiffMatte) repo as following:
 git clone https://github.com/YihanHu-2022/DiffMatte.git
 ```
 
-Download pretrained models [SAM_vit_h](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth), [ViTMatte_vit_b](https://drive.google.com/file/d/1d97oKuITCeWgai2Tf3iNilt6rMSSYzkW/view?usp=sharing), [GroundingDINO-T](https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth), and [DiffMatte checkpoint](https://github.com/YihanHu-2022/DiffMatte?tab=readme-ov-file#results). Put them in ``./pretrained``
+Add [AEMatter](https://github.com/aipixel/AEMatter) repo as following:
+```
+git clone https://github.com/aipixel/AEMatter.git
+```
+
+Download pretrained models [SAM_vit_h](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth), [ViTMatte_vit_b](https://drive.google.com/file/d/1d97oKuITCeWgai2Tf3iNilt6rMSSYzkW/view?usp=sharing), [GroundingDINO-T](https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth), [DiffMatte checkpoint](https://github.com/YihanHu-2022/DiffMatte?tab=readme-ov-file#results), and [AEMatter checkpoint](https://github.com/aipixel/AEMatter?tab=readme-ov-file#models). Put them in ``./pretrained``
+
+Download [swin_tiny_patch4_window7_224](https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth) for AEMatter and put it in ``.``.
 
 ### Run our web-ui!
 ```
