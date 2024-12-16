@@ -1,15 +1,21 @@
 import os
+import sys
 import cv2
 import torch
 import numpy as np
 import gradio as gr
 from PIL import Image
+from re import findall
 from torchvision.ops import box_convert
 from detectron2.config import LazyConfig, instantiate
 from detectron2.checkpoint import DetectionCheckpointer
 from segment_anything import sam_model_registry, SamPredictor
 import groundingdino.datasets.transforms as T
 from groundingdino.util.inference import load_model as dino_load_model, predict as dino_predict, annotate as dino_annotate
+
+
+MATTING_MODELS = ["ViTMatte", "DiffMatte"]
+MATTING_IDX = 1
 
 models = {
 	'vit_h': './pretrained/sam_vit_h_4b8939.pth',
@@ -63,6 +69,14 @@ def init_segment_anything(model_type):
 
     return predictor
 
+def init_matte(model_type):
+    if MATTING_MODELS[MATTING_IDX] == "ViTMatte":
+        return init_vitmatte(model_type)
+    elif MATTING_MODELS[MATTING_IDX] == "DiffMatte":
+        return init_diffmatte()
+    else:
+        raise ValueError("Unknown matting model")
+
 def init_vitmatte(model_type):
     """
     Initialize the vitmatte with model_type in ['vit_s', 'vit_b']
@@ -74,6 +88,32 @@ def init_vitmatte(model_type):
     DetectionCheckpointer(vitmatte).load(vitmatte_models[model_type])
 
     return vitmatte
+
+
+def init_diffmatte(
+    model="./DiffMatte/configs/ViTS_1024.py",
+    checkpoint="./pretrained/DiffMatte_ViTS_Com_1024.pth",
+    sample_strategy="ddim10",
+):
+    
+    diffmatte_path = os.path.join(os.path.dirname(__file__), "DiffMatte")
+    sys.path.insert(0, diffmatte_path)
+    
+    cfg = LazyConfig.load(model)
+    if sample_strategy is not None:
+        cfg.difmatte.args["use_ddim"] = True if "ddim" in sample_strategy else False
+        cfg.diffusion.steps = int(findall(r"\d+", sample_strategy)[0])
+
+    model = instantiate(cfg.model)
+    diffusion = instantiate(cfg.diffusion)
+    cfg.difmatte.model = model
+    cfg.difmatte.diffusion = diffusion
+    difmatte = instantiate(cfg.difmatte)
+    difmatte.to(device)
+    difmatte.eval()
+    DetectionCheckpointer(difmatte).load(checkpoint)
+
+    return difmatte
 
 def generate_trimap(mask, erode_kernel_size=10, dilate_kernel_size=10):
     erode_kernel = np.ones((erode_kernel_size, erode_kernel_size), np.uint8)
@@ -143,6 +183,16 @@ def convert_pixels(gray_image, boxes):
 
     return converted_image
 
+
+def pred_matting(model, input):
+    alpha = model(input)
+    if model.__class__.__name__ == "ViTMatte":
+        alpha = alpha["phas"].flatten(0, 2)
+        alpha = alpha.detach().cpu().numpy()
+    elif model.__class__.__name__ == "DifMatte":
+        alpha /= 255.0
+    return alpha
+
 if __name__ == "__main__":
     if torch.cuda.is_available():
         device = 'cuda'
@@ -158,7 +208,7 @@ if __name__ == "__main__":
     print('Initializing models... Please wait...')
 
     predictor = init_segment_anything(sam_model)
-    vitmatte = init_vitmatte(vitmatte_model)
+    matting_model = init_matte(vitmatte_model)
     grounding_dino = dino_load_model(grounding_dino['config'], grounding_dino['weight'])
 
     def run_inference(input_x, selected_points, erode_kernel_size, dilate_kernel_size, fg_box_threshold, fg_text_threshold, fg_caption, 
@@ -254,8 +304,7 @@ if __name__ == "__main__":
         }
 
         torch.cuda.empty_cache()
-        alpha = vitmatte(input)['phas'].flatten(0,2)
-        alpha = alpha.detach().cpu().numpy()
+        alpha = pred_matting(matting_model, input)
         
         # get a green background
         background = generate_checkerboard_image(input_x.shape[0], input_x.shape[1], 8)
