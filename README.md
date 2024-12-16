@@ -80,7 +80,12 @@ cd GroundingDINO
 pip install -e .
 ```
 
-Download pretrained models [SAM_vit_h](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth), [ViTMatte_vit_b](https://drive.google.com/file/d/1d97oKuITCeWgai2Tf3iNilt6rMSSYzkW/view?usp=sharing), and [GroundingDINO-T](https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth). Put them in ``./pretrained``
+Add [DiffMatte](https://github.com/YihanHu-2022/DiffMatte) repo as following:
+```
+git clone https://github.com/YihanHu-2022/DiffMatte.git
+```
+
+Download pretrained models [SAM_vit_h](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth), [ViTMatte_vit_b](https://drive.google.com/file/d/1d97oKuITCeWgai2Tf3iNilt6rMSSYzkW/view?usp=sharing), [GroundingDINO-T](https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth), and [DiffMatte checkpoint](https://github.com/YihanHu-2022/DiffMatte?tab=readme-ov-file#results). Put them in ``./pretrained``
 
 ### Run our web-ui!
 ```
