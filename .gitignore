@@ -153,3 +153,5 @@ testcode/
 
 # your own demos
 your_demos/
+
+swin_tiny_patch4_window7_224x224.pth
