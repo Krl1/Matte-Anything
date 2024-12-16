@@ -214,6 +214,12 @@ if __name__ == "__main__":
     def run_inference(input_x, selected_points, erode_kernel_size, dilate_kernel_size, fg_box_threshold, fg_text_threshold, fg_caption, 
                       tr_box_threshold, tr_text_threshold, save_name, tr_caption = "glass, lens, crystal, diamond, bubble, bulb, web, grid"):
         
+        if len(selected_points) == 0:
+            selected_points.append(([input_x.shape[1] // 2, input_x.shape[0] // 2], 1))
+
+        if fg_caption is None or fg_caption == "":
+            fg_caption = "the biggest foreground object"
+        
         predictor.set_image(input_x)
 
         dino_transform = T.Compose(
@@ -224,37 +230,30 @@ if __name__ == "__main__":
         ])
         image_transformed, _ = dino_transform(Image.fromarray(input_x), None)
         
-        if len(selected_points) != 0:
-            points = torch.Tensor([p for p, _ in selected_points]).to(device).unsqueeze(1)
-            labels = torch.Tensor([int(l) for _, l in selected_points]).to(device).unsqueeze(1)
-            transformed_points = predictor.transform.apply_coords_torch(points, input_x.shape[:2])
-            print(points.size(), transformed_points.size(), labels.size(), input_x.shape, points)
-            point_coords=transformed_points.permute(1, 0, 2)
-            point_labels=labels.permute(1, 0)
-        else:
-            transformed_points, labels = None, None
-            point_coords, point_labels = None, None
+        points = torch.Tensor([p for p, _ in selected_points]).to(device).unsqueeze(1)
+        labels = torch.Tensor([int(l) for _, l in selected_points]).to(device).unsqueeze(1)
+        transformed_points = predictor.transform.apply_coords_torch(points, input_x.shape[:2])
+        print(points.size(), transformed_points.size(), labels.size(), input_x.shape, points)
+        point_coords=transformed_points.permute(1, 0, 2)
+        point_labels=labels.permute(1, 0)
         
-        if fg_caption is not None and fg_caption != "": # This section has benefited from the contributions of neuromorph,thanks! 
-            fg_boxes, logits, phrases = dino_predict(
-                model=grounding_dino,
-                image=image_transformed,
-                caption=fg_caption,
-                box_threshold=fg_box_threshold,
-                text_threshold=fg_text_threshold,
-                device=device)
-            print(logits, phrases)
-            if fg_boxes.shape[0] == 0:
-                # no fg object detected
-                transformed_boxes = None
-            else:
-                h, w, _ = input_x.shape
-                fg_boxes = torch.Tensor(fg_boxes).to(device)
-                fg_boxes = fg_boxes * torch.Tensor([w, h, w, h]).to(device)
-                fg_boxes = box_convert(boxes=fg_boxes, in_fmt="cxcywh", out_fmt="xyxy")
-                transformed_boxes = predictor.transform.apply_boxes_torch(fg_boxes, input_x.shape[:2])
-        else:
+        fg_boxes, logits, phrases = dino_predict(
+            model=grounding_dino,
+            image=image_transformed,
+            caption=fg_caption,
+            box_threshold=fg_box_threshold,
+            text_threshold=fg_text_threshold,
+            device=device)
+        print(logits, phrases)
+        if fg_boxes.shape[0] == 0:
+            # no fg object detected
             transformed_boxes = None
+        else:
+            h, w, _ = input_x.shape
+            fg_boxes = torch.Tensor(fg_boxes).to(device)
+            fg_boxes = fg_boxes * torch.Tensor([w, h, w, h]).to(device)
+            fg_boxes = box_convert(boxes=fg_boxes, in_fmt="cxcywh", out_fmt="xyxy")
+            transformed_boxes = predictor.transform.apply_boxes_torch(fg_boxes, input_x.shape[:2])
                     
         # predict segmentation according to the boxes
         masks, scores, logits = predictor.predict_torch(
