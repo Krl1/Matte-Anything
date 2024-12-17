@@ -65,7 +65,9 @@ def profile_function(func, matte_method, *args, **kwargs):
     profiler.dump_stats(f'{directory_path}/{time.strftime("%Y%m%d-%H%M%S")}.prof')
     s = io.StringIO()
     ps = pstats.Stats(profiler, stream=s).sort_stats(SortKey.CUMULATIVE)
-    ps.print_stats()
+    ps.print_stats("predictor.py:", 1)
+    ps.print_stats("inference.py:", 1)
+    ps.print_stats("matte_anything.py:", 3)
     print(s.getvalue())
     return result
 
