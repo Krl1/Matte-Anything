@@ -390,7 +390,14 @@ if __name__ == "__main__":
             text_threshold=fg_text_threshold,
             device=device,
         )
-        print(logits, phrases)
+
+        print(logits, phrases, fg_boxes)
+        if len(phrases) > 1:
+            max_logit_index = torch.argmax(logits)
+            logits = logits[max_logit_index]
+            phrases = phrases[max_logit_index]
+            fg_boxes = fg_boxes[max_logit_index]
+
         if fg_boxes.shape[0] == 0:
             # no fg object detected
             transformed_boxes = None
