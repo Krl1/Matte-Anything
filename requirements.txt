@@ -9,3 +9,4 @@ wget
 scikit-image
 gradio==3.34.0
 fairscale
+einops
