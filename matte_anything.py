@@ -306,6 +306,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--matte-method",
+        "-m",
         type=str,
         default="ViTMatte",
         choices=["ViTMatte", "DiffMatte", "AEMatter"],
