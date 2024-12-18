@@ -68,8 +68,6 @@ def generate_checkerboard_image(height, width, num_squares):
 
 def generate_white_background(height, width):
     image = np.ones((height, width, 3), dtype=np.uint8) * 255
-    image = cv2.resize(image, (width, height))
-    image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     return image
 
 
