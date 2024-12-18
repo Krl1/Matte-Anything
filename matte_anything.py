@@ -97,6 +97,11 @@ def generate_checkerboard_image(height, width, num_squares):
     return image
 
 
+def generate_white_background(height, width):
+    image = np.ones((height, width, 3), dtype=np.uint8) * 255
+    return image
+
+
 def init_segment_anything(model_type):
     """
     Initialize the segmenting anything with model_type in ['vit_b', 'vit_l', 'vit_h']
@@ -337,6 +342,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--matte-method",
+        "-m",
         type=str,
         default="ViTMatte",
         choices=["ViTMatte", "DiffMatte", "AEMatter"],
@@ -492,7 +498,8 @@ if __name__ == "__main__":
         alpha = pred_matting(matting_model, input_x, trimap)
 
         # get a green background
-        background = generate_checkerboard_image(input_x.shape[0], input_x.shape[1], 8)
+        # background = generate_checkerboard_image(input_x.shape[0], input_x.shape[1], 8)
+        background = generate_white_background(input_x.shape[0], input_x.shape[1])
         # calculate foreground with alpha blending
         foreground_alpha = (
             input_x * np.expand_dims(alpha, axis=2).repeat(3, 2) / 255
