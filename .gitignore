@@ -155,6 +155,8 @@ testcode/
 # your own demos
 your_demos/
 
+AEMatter/
+DiffMatte/
 swin_*.pth
 outputs/
 profiling_results/
