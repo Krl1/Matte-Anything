@@ -282,12 +282,13 @@ def pred_matting(model, input_x, trimap):
         alpha = model(input)
         alpha /= 255.0
     elif model.__class__.__name__ == "AEMatter":
+        trimap = np.array(trimap * 255, np.uint8)
+        trimap[trimap == 127] = 128
         trimap_nonp = trimap.copy()
         image, trimap, sizes = preprocess_input(input_x, trimap)
         with torch.no_grad():
             alpha = model(image, trimap)
             alpha = postprocess_alpha(alpha, trimap_nonp, sizes)
-        alpha = np.array(alpha, np.uint8)
     return alpha
 
 
@@ -334,7 +335,7 @@ def postprocess_alpha(pred, trimap_nonp, sizes):
         preda * (trimap_nonp[:, :, None] == 128)
         + (trimap_nonp[:, :, None] == 255) * 255
     )
-
+    preda /= 255.0
     return preda.squeeze()
 
 
