@@ -1,12 +1,17 @@
 import os
+import io
 import sys
 import cv2
+import time
 import torch
+import pstats
+import cProfile
 import argparse
 import numpy as np
 import gradio as gr
 from PIL import Image
 from re import findall
+from pstats import SortKey
 from torchvision.ops import box_convert
 from detectron2.config import LazyConfig, instantiate
 from detectron2.checkpoint import DetectionCheckpointer
@@ -39,6 +44,32 @@ grounding_dino = {
     "config": "./GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py",
     "weight": "./pretrained/groundingdino_swint_ogc.pth",
 }
+
+
+def profile_function(func, matte_method, *args, **kwargs):
+    """
+    Profiles a function and prints the results.
+
+    Args:
+        func: The function to profile.
+        *args: Positional arguments for the function.
+        **kwargs: Keyword arguments for the function.
+    """
+    profiler = cProfile.Profile()
+    profiler.enable()
+    result = func(*args, **kwargs)
+    profiler.disable()
+
+    directory_path = f"profiling_results/{matte_method}"
+    os.makedirs(directory_path, exist_ok=True)
+    profiler.dump_stats(f'{directory_path}/{time.strftime("%Y%m%d-%H%M%S")}.prof')
+    s = io.StringIO()
+    ps = pstats.Stats(profiler, stream=s).sort_stats(SortKey.CUMULATIVE)
+    ps.print_stats("predictor.py:", 1)
+    ps.print_stats("inference.py:", 1)
+    ps.print_stats("matte_anything.py:", 3)
+    print(s.getvalue())
+    return result
 
 
 def generate_checkerboard_image(height, width, num_squares):
@@ -533,6 +564,36 @@ if __name__ == "__main__":
             new_bg_3,
         )
 
+    # Profiling wrapper for the Gradio callback
+    def profiled_run_inference(
+        input_x,
+        selected_points,
+        erode_kernel_size,
+        dilate_kernel_size,
+        fg_box_threshold,
+        fg_text_threshold,
+        fg_caption,
+        tr_box_threshold,
+        tr_text_threshold,
+        save_name,
+        tr_caption="glass, lens, crystal, diamond, bubble, bulb, web, grid",
+    ):
+        return profile_function(
+            run_inference,
+            args.matte_method,
+            input_x,
+            selected_points,
+            erode_kernel_size,
+            dilate_kernel_size,
+            fg_box_threshold,
+            fg_text_threshold,
+            fg_caption,
+            tr_box_threshold,
+            tr_text_threshold,
+            save_name,
+            tr_caption="glass, lens, crystal, diamond, bubble, bulb, web, grid",
+        )
+
     with gr.Blocks() as demo:
         gr.Markdown(
             """
@@ -677,7 +738,7 @@ if __name__ == "__main__":
         Tab2.select(undo_all_points, [original_image, selected_points], [input_image])
 
         button.click(
-            run_inference,
+            profiled_run_inference,
             inputs=[
                 original_image,
                 selected_points,
