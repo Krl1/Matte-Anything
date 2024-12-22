@@ -7,7 +7,7 @@ ENV PATH="/usr/local/cuda/bin:$PATH" \
     LD_LIBRARY_PATH="/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
 
 # Set the working directory inside the container
-WORKDIR /workspace/Matte_Anything
+WORKDIR /workspace/Matte-Anything
 
 # Update the package list, install required system libraries, and clean up
 RUN apt-get update && \
@@ -26,15 +26,15 @@ RUN pip install --upgrade pip && \
     python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 
 # Copy and install additional Python requirements
-COPY requirements.txt /workspace/Matte_Anything/
+COPY requirements.txt /workspace/Matte-Anything/
 RUN pip install -r requirements.txt
 
 RUN git clone https://github.com/YihanHu-2022/DiffMatte.git && \
     git clone https://github.com/aipixel/AEMatter.git
 
 # Clone and install GroundingDINO
-RUN git clone https://github.com/IDEA-Research/GroundingDINO.git /workspace/Matte_Anything/GroundingDINO && \
-    pip install -e /workspace/Matte_Anything/GroundingDINO
+RUN git clone https://github.com/IDEA-Research/GroundingDINO.git /workspace/Matte-Anything/GroundingDINO && \
+    pip install -e /workspace/Matte-Anything/GroundingDINO
 
 # Expose the application port
 EXPOSE 7860
